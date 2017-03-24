@@ -1,0 +1,98 @@
+functions:
+  "fetchSource" :
+    command: git.get_project
+    params:
+      directory: mongo-orchestration
+  "fetchMongo" :
+    command: shell.exec
+    params:
+      working_dir: "mongo-orchestration"
+      script: |
+          set -o errexit
+          set -o verbose
+          # We have to to do this to get the bash script to run properly on Windows
+          if [ ${PLATFORM} = "win32" ]; then
+            dos2unix .evergreen/download_mongo.sh 
+          fi
+          PLATFORM="${PLATFORM}" DOWNLOAD_URL="${DOWNLOAD_URL}" ENTERPRISE_LABEL="${ENTERPRISE_LABEL}" FILE_EXT="${FILE_EXT}" PLATFORM_DECOMPRESS="${PLATFORM_DECOMPRESS}" MONGO_VERSION="${MONGO_VERSION}" .evergreen/download_mongo.sh
+  "testOrchestration" :
+    command: shell.exec
+    params:
+      working_dir: "mongo-orchestration"
+      script: |
+          set -o errexit
+          set -o verbose
+          # We have to to do this to get the bash script to run properly on Windows
+          if [ ${PLATFORM} = "win32" ]; then
+            dos2unix .evergreen/test_orchestration.sh
+          fi
+          MONGOBIN="./mongod/bin/" .evergreen/test_orchestration.sh
+
+pre:
+  - func: "fetchSource"
+
+tasks:
+  # Run Mongo orchestration tests 
+  - name: test-orchestration
+    commands:
+      - func: "fetchMongo"
+      - func: "testOrchestration"
+
+axes:
+  - id: os
+    display_name: OS
+    values:
+      - id: "rhel62"
+        display_name: "RHEL 6.2"
+        run_on: rhel62-test
+        variables:
+          PLATFORM: "linux"
+          PLATFORM_DECOMPRESS: "tar -xf"
+          DOWNLOAD_URL: "downloads.10gen.com"
+          ENTERPRISE_LABEL: "enterprise-rhel62"
+          FILE_EXT: "tgz"
+      - id: "windows64"
+        display_name: "Windows 64"
+        run_on: windows-64-vs2015-test
+        variables:
+          PLATFORM: "win32"
+          PLATFORM_DECOMPRESS: "unzip"
+          DOWNLOAD_URL: "fastdl.mongodb.org"
+          ENTERPRISE_LABEL: "2008plus"
+          FILE_EXT: "zip"
+
+  - id: mongo_version 
+    display_name: Mongo Version 
+    values:
+      - id: "latest"
+        display_name: Mongo latest
+        variables:
+           MONGO_VERSION: "latest"
+      - id: "3.4"
+        display_name: Mongo 3.4
+        variables:
+           MONGO_VERSION: "3.4.2"
+      - id: "3.2"
+        display_name: Mongo 3.2
+        variables:
+           MONGO_VERSION: "3.2.12"
+      - id: "3.0"
+        display_name: Mongo 3.0 
+        variables:
+           MONGO_VERSION: "3.0.14"
+      - id: "2.6"
+        display_name: Mongo 2.6
+        variables:
+           MONGO_VERSION: "2.6.12"
+      - id: "2.4"
+        display_name: Mongo 2.4
+        variables:
+           MONGO_VERSION: "2.4.14"
+
+buildvariants:
+
+### Orchestration Test Matrix 
+- matrix_name: "mongo_orchestration_tests"
+  matrix_spec: {os: "*", mongo_version: "*"}
+  display_name: "${os} testing ${mongo_version}"
+  tasks : "*"
