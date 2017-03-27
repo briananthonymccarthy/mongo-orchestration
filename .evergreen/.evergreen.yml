@@ -11,9 +11,9 @@ functions:
           set -o errexit
           set -o verbose
           # We have to to do this to get the bash script to run properly on Windows
-          if [ ${PLATFORM} = "win32" ]; then
-            dos2unix .evergreen/download_mongo.sh 
-          fi
+          # if [ ${PLATFORM} = "win32" ]; then
+          #  dos2unix .evergreen/download_mongo.sh 
+          # fi
           PLATFORM="${PLATFORM}" DOWNLOAD_URL="${DOWNLOAD_URL}" ENTERPRISE_LABEL="${ENTERPRISE_LABEL}" FILE_EXT="${FILE_EXT}" PLATFORM_DECOMPRESS="${PLATFORM_DECOMPRESS}" MONGO_VERSION="${MONGO_VERSION}" .evergreen/download_mongo.sh
   "testOrchestration" :
     command: shell.exec
@@ -23,9 +23,9 @@ functions:
           set -o errexit
           set -o verbose
           # We have to to do this to get the bash script to run properly on Windows
-          if [ ${PLATFORM} = "win32" ]; then
-            dos2unix .evergreen/test_orchestration.sh
-          fi
+          # if [ ${PLATFORM} = "win32" ]; then
+          #  dos2unix .evergreen/test_orchestration.sh
+          # fi
           MONGOBIN="./mongod/bin/" .evergreen/test_orchestration.sh
 
 pre:
